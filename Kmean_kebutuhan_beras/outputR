@@ -1,0 +1,118 @@
+> library(readxl)
+> data_tugas <- read_excel("data_tugas.xls")
+> View(data_tugas)                                                                                 
+> setwd("~/")
+> library(ggplot2)
+> library(cluster)
+> data=data_tugas
+> data
+# A tibble: 19 x 5
+   Kecamatan      Rice Population Kebutuhan Selisih
+   <chr>         <dbl>      <dbl>     <dbl>   <dbl>
+ 1 Kandangserang  8981      33742     3115.  5866. 
+ 2 Paninggaran    5060      35545     3313.  1747. 
+ 3 Lebakbarang    2568      10508      979.  1589. 
+ 4 Petungkriyono  1220      12853     1198.    22.1
+ 5 Talun          6825      27318     2546.  4279. 
+ 6 Doro           6771      38205     3561.  3210. 
+ 7 Karanganyar    8968      37313     3478.  5490. 
+ 8 Kajen         17568      58734     5474  12094  
+ 9 Kesesi        27266      61953     5774  21492  
+10 Sragi         12653      62830     5856.  6797. 
+11 Siwalan        7689      38019     3543.  4146. 
+12 Bojong        13980      63285     5898.  8082. 
+13 Wonopringgo    3114      43018     4009.  -895. 
+14 Kedungwuni     4955      98833     9211. -4256. 
+15 Karangdadap    7577      36737     3424.  4153. 
+16 Buaran         2032      46426     4327. -2295. 
+17 Tirto          2569      72878     6792. -4223. 
+18 Wiradesa       2792      60019     5594. -2802. 
+19 Wonokerto       910      47981     4472. -3562. 
+> data$Kecamatan
+ [1] "Kandangserang" "Paninggaran"   "Lebakbarang"   "Petungkriyono" "Talun"         "Doro"         
+ [7] "Karanganyar"   "Kajen"         "Kesesi"        "Sragi"         "Siwalan"       "Bojong"       
+[13] "Wonopringgo"   "Kedungwuni"    "Karangdadap"   "Buaran"        "Tirto"         "Wiradesa"     
+[19] "Wonokerto"    
+> hasil<-kmeans(data[,2,3],3)
+> hasil
+K-means clustering with 3 clusters of sizes 2, 9, 8
+
+Cluster means:
+       [,1]
+1 22417.000
+2  2802.222
+3  9180.500
+
+Clustering vector:
+ [1] 3 2 2 2 3 3 3 1 1 3 3 3 2 2 3 2 2 2 2
+
+Within cluster sum of squares by cluster:
+[1] 47025602 16615750 51328268
+ (between_SS / total_SS =  85.3 %)
+
+Available components:
+
+[1] "cluster"      "centers"      "totss"        "withinss"     "tot.withinss" "betweenss"   
+[7] "size"         "iter"         "ifault"      
+> hasil$cluster
+ [1] 3 2 2 2 3 3 3 1 1 3 3 3 2 2 3 2 2 2 2
+> hasil$centers
+       [,1]
+1 22417.000
+2  2802.222
+3  9180.500
+> hasil$size
+[1] 2 9 8
+> table(hasil$cluster, data$Wilayah)
+Error in table(hasil$cluster, data$Wilayah) : 
+  all arguments must have the same length
+In addition: Warning message:
+Unknown or uninitialised column: 'Wilayah'. 
+> table(hasil$cluster, data$Kecamatan)
+   
+    Bojong Buaran Doro Kajen Kandangserang Karanganyar Karangdadap Kedungwuni Kesesi Lebakbarang
+  1      0      0    0     1             0           0           0          0      1           0
+  2      0      1    0     0             0           0           0          1      0           1
+  3      1      0    1     0             1           1           1          0      0           0
+   
+    Paninggaran Petungkriyono Siwalan Sragi Talun Tirto Wiradesa Wonokerto Wonopringgo
+  1           0             0       0     0     0     0        0         0           0
+  2           1             1       0     0     0     1        1         1           1
+  3           0             0       1     1     1     0        0         0           0
+> hasil$cluster <- as.factor(hasil$cluster)
+> ggplot(data, aes(data$Kecamatan, data$Rice, data$Population, data$Kebutuhan, data$Selisih, color = hasil$cluster)) + geom_point()
+Warning message:
+Duplicated aesthetics after name standardisation:  
+> dataSample <-data[,2,3]
+> hc <- hclust(dist(dataSample), method="ave")
+> hc
+
+Call:
+hclust(d = dist(dataSample), method = "ave")
+
+Cluster method   : average 
+Distance         : euclidean 
+Number of objects: 19 
+
+> plot(hc, hang = -1, labels=data$Negeri)
+Warning message:
+Unknown or uninitialised column: 'Negeri'. 
+> plot(hc, hang = -1, labels=data$Kecamatan)
+> d <- dist(dataSample, method="euclidian")
+> pamCluster <- pam(d, 3)
+> clusplot(as.matrix(d), pamCluster$cluster, color=T, shade=T, labels=3, lines=0)
+> pamCluster
+Medoids:
+     ID   
+[1,] 11 11
+[2,] 17 17
+[3,] 12 12
+Clustering vector:
+ [1] 1 2 2 2 1 1 1 3 3 3 1 3 2 2 1 2 2 2 2
+Objective function:
+   build     swap 
+1696.105 1676.684 
+
+Available components:
+[1] "medoids"    "id.med"     "clustering" "objective"  "isolation"  "clusinfo"   "silinfo"   
+[8] "diss"       "call"
